@@ -30,10 +30,12 @@ public class Screen extends JPanel implements ActionListener {
   private JButton endGameButton;
   private JButton buybutton;
   private JButton startButton;
+  private JButton restartButton;
   private Player player1;
   private Player player2;
   private String[][] cards;
   private String turn; // true if it's player 1's turn and false if it's player 2's turn
+  private String gameMessage;
 
   private ArrayList<Card> cardList;
   // private SlotMachine machine;
@@ -64,40 +66,19 @@ public class Screen extends JPanel implements ActionListener {
         { "Sowers Lane", "330", "36" },
         { "Leeds Esplanade", "350", "38" },
       };
-    this.cardList = new ArrayList<Card>();
-    for (int i = 0; i < 20; i++) {
-      if (i == 0 || i == 5 || i == 10 || i == 15) {
-        cardList.add(
-          new Corner(
-            this.cards[i][0],
-            Integer.valueOf(this.cards[i][1]),
-            Integer.valueOf(this.cards[i][2])
-          )
-        );
-      } else {
-        cardList.add(
-          new Property(
-            this.cards[i][0],
-            Integer.valueOf(this.cards[i][1]),
-            Integer.valueOf(this.cards[i][2])
-          )
-        );
-      }
-    }
-    turnCount = 1;
-    this.player1 = new Player("./Hefty Smurf.png", 50, 55, 70);
-    this.player2 = new Player("./Smurf Melody.png", 82, 50, 60);
-    roll = 0;
-    turn = "Player 2";
-
-    // machine = new SlotMachine(100);
     this.startGame = true;
-    this.gameOver = false;
+    setUp();
 
     startButton = new JButton("Start");
     startButton.setBounds(500, 300, 200, 200);
     add(startButton);
     startButton.addActionListener(this);
+
+    restartButton = new JButton("Restart");
+    restartButton.setBounds(500, 300, 200, 200);
+    add(restartButton);
+    restartButton.addActionListener(this);
+    restartButton.setVisible(false);
 
     // roll = new JTextField();
     // //x,y,width,height
@@ -154,6 +135,7 @@ public class Screen extends JPanel implements ActionListener {
     g.setFont(font);
     g.drawString("Smurf Balance : " + player1.getMoney(), 925, 100);
     g.drawString("Smurfette Balance : " + player2.getMoney(), 925, 120);
+    g.drawString(this.gameMessage, 925, 140);
 
     font = new Font("Arial", Font.PLAIN, 25);
     g.setFont(font);
@@ -208,6 +190,7 @@ public class Screen extends JPanel implements ActionListener {
     }
 
     if (gameOver) {
+      restartButton.setVisible(true);
       rollButton.setVisible(false);
       buybutton.setVisible(false);
       endGameButton.setVisible(false);
@@ -244,14 +227,52 @@ public class Screen extends JPanel implements ActionListener {
         player1.move();
       }
       if (player1.shouldBeInJail()) {
+        gameMessage = "Smurf has entered jail";
         player1.setInJail(true);
       }
-    } else if (roll == 2) {
+    } else{
+      gameMessage = "Smurf is in jail";
+      if (roll == 2) {
       player1.setInJail(false); //if they are in jail and roll 2, bring them out
+      gameMessage = "Smurf got out of jail";
       for (int i = 0; i < roll; i++) {
         player1.move();
       }
+      }
     }
+  }
+
+  public void setUp(){
+    this.cardList = new ArrayList<Card>();
+    Card card = new Card();
+    card.resetCount();
+    for (int i = 0; i < 20; i++) {
+      if (i == 0 || i == 5 || i == 10 || i == 15) {
+        cardList.add(
+          new Corner(
+            this.cards[i][0],
+            Integer.valueOf(this.cards[i][1]),
+            Integer.valueOf(this.cards[i][2])
+          )
+        );
+      } else {
+        cardList.add(
+          new Property(
+            this.cards[i][0],
+            Integer.valueOf(this.cards[i][1]),
+            Integer.valueOf(this.cards[i][2])
+          )
+        );
+      }
+    }
+    turnCount = 1;
+    this.player1 = new Player("./Hefty Smurf.png", 50, 55, 70);
+    this.player2 = new Player("./Smurf Melody.png", 82, 50, 60);
+    roll = 0;
+    turn = "Player 2";
+
+    this.gameOver = false;
+    this.gameMessage = "Game has started!";
   }
 
   public void movePlayer2() {
@@ -261,13 +282,18 @@ public class Screen extends JPanel implements ActionListener {
         player2.move();
       }
       if (player2.shouldBeInJail()) {
+        gameMessage = "Smurfette has entered jail";
         player2.setInJail(true);
       }
-    } else if (roll == 2) {
+    } else{
+      gameMessage = "Smurfette is in jail";
+       if (roll == 2) {
       player2.setInJail(false); //if they are in jail and roll 2, bring them out
+      gameMessage = "Smurfette got out of jail";
       for (int i = 0; i < roll; i++) {
         player2.move();
       }
+       }
     }
   }
 
@@ -302,6 +328,7 @@ public class Screen extends JPanel implements ActionListener {
         if (card.getCostToBuy() <= player1.getMoney()) {
           if (card.buy(1)) {
             player1.spend(card.getCostToBuy());
+            gameMessage = "Smurf just bought a property";
           }
         }
       } else {
@@ -317,6 +344,7 @@ public class Screen extends JPanel implements ActionListener {
         if (card.getCostToBuy() <= player2.getMoney()) {
           if (card.buy(2)) {
             player2.spend(card.getCostToBuy());
+            gameMessage = "Smurfette just bought a property";
           }
         }
       }
@@ -335,6 +363,7 @@ public class Screen extends JPanel implements ActionListener {
       roll = (int) (Math.random() * (4 - 1 + 1) + 1);
       repaint();
       if (turn.equals("Player 1")) {
+        gameMessage = "Smurf's turn";
         movePlayer1();
         if (
           player1.getSquareNums() == 6 ||
@@ -349,9 +378,11 @@ public class Screen extends JPanel implements ActionListener {
         if (rentToPay != 0) {
           player1.payRent(rentToPay);
           player2.getRent(rentToPay);
+          gameMessage = "Smurf just paid rent of " +rentToPay + " to Smurfette";
         }
       } else {
         movePlayer2();
+        gameMessage = "Smurfette's turn";
         if (
           player2.getSquareNums() == 6 ||
           player2.getSquareNums() == 11 ||
@@ -365,6 +396,7 @@ public class Screen extends JPanel implements ActionListener {
         if (rentToPay != 0) {
           player2.payRent(rentToPay);
           player1.getRent(rentToPay);
+          gameMessage = "Smurfette just paid rent of " +rentToPay + " to Smurf";
         }
       }
     }
@@ -382,6 +414,16 @@ public class Screen extends JPanel implements ActionListener {
       rollButton.setVisible(false);
       buybutton.setVisible(false);
       endGameButton.setVisible(false);
+      restartButton.setVisible(true);
+    }
+
+    if (e.getSource() == restartButton) {
+      setUp();
+      rollButton.setVisible(true);
+      buybutton.setVisible(true);
+      endGameButton.setVisible(true);
+      restartButton.setVisible(false);
+      
     }
     //refresh the screen to display new value after the pin is entered
     repaint();

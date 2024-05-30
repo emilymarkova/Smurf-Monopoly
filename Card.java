@@ -14,6 +14,10 @@ public class Card {
     return count;
   }
 
+  public void resetCount(){
+    count = 0;
+  }
+
   public Card() {
     count += 1;
   }
